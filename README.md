@@ -3,6 +3,10 @@
 This repo is meant to demonstrate a bug that occurs when vendoring a repo into a
 different repo such that both are content roots in a GoLand project.
 
+I believe that GoLand uses a depth first search algorithm in order to find the
+correct working directory to run a test from instead of a breath first search
+which leads to finding vendored modules before the modules themselves.
+
 ## GoLand Version
 
 ```
@@ -19,6 +23,9 @@ Cores: 12
 Registry: ide.completion.variant.limit=500, debugger.watches.in.variables=false, suggest.all.run.configurations.from.context=true, ide.balloon.shadow.size=0, ideFeaturesTrainer.welcomeScreen.tutorialsTree=TRUE
 Non-Bundled Plugins: BashSupport, IdeaVIM, Key Promoter X, com.alayouni.ansiHighlight, com.arcticicestudio.nord.jetbrains, com.intellij.ideolog, com.jetbrains.plugins.ini4idea, org.jetbrains.plugins.sass, ideanginx9, name.kropp.intellij.makefile, net.seesharpsoft.intellij.plugins.csv, org.jetbrains.plugins.hocon, mobi.hsz.idea.gitignore, com.intellij.kubernetes, org.zalando.intellij.swagger, org.toml.lang, NodeJS, com.intellij.plugins.html.instantEditing, intellij.prettierJS, AngularJS, com.dmarcotte.handlebars, izhangzhihao.rainbow.brackets, PythonCore, ru.adelf.idea.dotenv, org.rust.lang
 ```
+
+## TLDR
+
 
 ## Bug Description
 
@@ -68,6 +75,13 @@ GOMOD="/Users/rking/Projects/jetbugs/myapp/vendor/github.com/ryantking/jetbugs/m
 
 What is strange is that it was only set incorrectly during the `go test -c`
 setup call, but set correctly during the `go tool test2json` call.
+
+I also added a `pwd` which showed the test setup command was done from the wrong
+directory:
+
+```
+/Users/rking/Projects/jetbugs/myapp/vendor/github.com/ryantking/jetbugs/mylib
+```
 
 ## Reproduction
 
