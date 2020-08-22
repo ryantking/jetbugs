@@ -1,3 +1,0 @@
-# github.com/ryantking/jetbugs/mylib v0.0.0-20200808164244-aa66da57ec61
-## explicit
-github.com/ryantking/jetbugs/mylib

@@ -1,6 +1,8 @@
-package mylib
+package math
 
 import "math"
+
+// EXTERNAL
 
 // Pow ....
 func Pow(x, y int) int {
