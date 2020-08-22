@@ -1,94 +1,39 @@
-# GoLand Vendor Bug
+# GoLand Coverage Window Bug
 
-This repo is meant to demonstrate a bug that occurs when vendoring a repo into a
-different repo such that both are content roots in a GoLand project.
-
-I believe that GoLand uses a depth first search algorithm in order to find the
-correct working directory to run a test from instead of a breath first search
-which leads to finding vendored modules before the modules themselves.
+This repo demonstrates a bug where the coverage suite window only works for tests in the same content root as the `.idea` project folder. Coverage suits for tests in other content roots are not found
 
 ## GoLand Version
 
 ```
-GoLand 2020.2.1
-Build #GO-202.6397.124, built on August 4, 2020
+GoLand 2020.2.2
+Build #GO-202.6948.9, built on August 11, 2020
 Licensed to XXXX
 Subscription is active until May 23, 2021
-Runtime version: 11.0.7+10-b944.20 x86_64
+Runtime version: 11.0.8+10-b944.31 x86_64
 VM: OpenJDK 64-Bit Server VM by JetBrains s.r.o.
 macOS 10.15.6
 GC: ParNew, ConcurrentMarkSweep
 Memory: 1979M
 Cores: 12
 Registry: ide.completion.variant.limit=500, debugger.watches.in.variables=false, suggest.all.run.configurations.from.context=true, ide.balloon.shadow.size=0, ideFeaturesTrainer.welcomeScreen.tutorialsTree=TRUE
-Non-Bundled Plugins: BashSupport, IdeaVIM, Key Promoter X, com.alayouni.ansiHighlight, com.arcticicestudio.nord.jetbrains, com.intellij.ideolog, com.jetbrains.plugins.ini4idea, org.jetbrains.plugins.sass, ideanginx9, name.kropp.intellij.makefile, net.seesharpsoft.intellij.plugins.csv, org.jetbrains.plugins.hocon, mobi.hsz.idea.gitignore, com.intellij.kubernetes, org.zalando.intellij.swagger, org.toml.lang, NodeJS, com.intellij.plugins.html.instantEditing, intellij.prettierJS, AngularJS, com.dmarcotte.handlebars, izhangzhihao.rainbow.brackets, PythonCore, ru.adelf.idea.dotenv, org.rust.lang
+Non-Bundled Plugins: BashSupport, IdeaVIM, Key Promoter X, com.alayouni.ansiHighlight, com.arcticicestudio.nord.jetbrains, com.intellij.ideolog, com.jetbrains.plugins.ini4idea, org.jetbrains.plugins.sass, com.paperetto.dash, ideanginx9, name.kropp.intellij.makefile, net.seesharpsoft.intellij.plugins.csv, org.jetbrains.plugins.hocon, mobi.hsz.idea.gitignore, com.intellij.kubernetes, org.zalando.intellij.swagger, org.toml.lang, NodeJS, com.intellij.plugins.html.instantEditing, intellij.prettierJS, AngularJS, com.dmarcotte.handlebars, izhangzhihao.rainbow.brackets, PythonCore, ru.adelf.idea.dotenv, org.rust.lang
 ```
-
-## TLDR
-
 
 ## Bug Description
 
-The common repo configuration that I use for developing a system with several
-microservices is as follows:
+Test suites that exist outside of the main content root do not show up in the test coverage window as one would expect. It seems like the test coverage window only picks up coverage profile files from the "main" content root (where the `.idea` folder is) so any test run with coverage in a different content root do not show up in the coverage window.
 
-- An API gateway repo that has the API as well as all the common packages such
-    as models, auth, errors, etc.
-- A repo per additional microservice
-- A "dev" repo that contains the GoLand project, dev documentation, common
-    resources such as HTTP requests, docker compose files, etc. that has the
-    other repos as content roots.
+What does work is:
 
-The common packages of the API repo are vendored into the other microservice
-repos.
-
-When trying to add new tests to one of the common packages in the API repository,
-GoLand seems to place priority on the vendored packages in the other
-repositories when running a test from the sidebar. The following error was
-outputted:
-
-```
-/usr/local/opt/go/libexec/bin/go tool test2json -t /private/var/folders/ft/pyybg1qd53d7sgz0f6sfydlw0000gp/T/___TestSquare2_in_github_com_ryantking_jetbugs_mylib -test.v -test.run ^TestSquare2$
-Process finished with exit code 0
-testing: warning: no tests to run
-PASS
-```
-
-Then, eventually the error switched to:
-
-```
-test2json: fork/exec /private/var/folders/ft/pyybg1qd53d7sgz0f6sfydlw0000gp/T/___TestSquare_in_github_com_ryantking_jetbugs_mylib: exec format error
-```
-
-## Confirmation
-
-Both errors were resolved by deleting the vendor folder then returned again
-after rerunning `go mod vendor` from the microservice repository.
-
-Another way I tested was by replacing the `go` binary used by GoLand with a bash
-script that outputted the go environment, and I noticed `GOMOD` was set
-incorrectly to the vendored module:
-
-```
-GOMOD="/Users/rking/Projects/jetbugs/myapp/vendor/github.com/ryantking/jetbugs/mylib/go.mod"
-```
-
-What is strange is that it was only set incorrectly during the `go test -c`
-setup call, but set correctly during the `go tool test2json` call.
-
-I also added a `pwd` which showed the test setup command was done from the wrong
-directory:
-
-```
-/Users/rking/Projects/jetbugs/myapp/vendor/github.com/ryantking/jetbugs/mylib
-```
+- Coverage gutter indicator
+- Coverage indication in the file tree sidebar
 
 ## Reproduction
 
 1. Clone this repository
 2. Open the `dev` folder in GoLand, the other content roots should be set
    properly.
-3. Try to run `TestSquare` in `mylib_test.go`, it should fail with one of the
-   two above errors.
-4. Delete the vendor folder in `myapp` then run the test again, it should pass
-
+3. Run the `Test in the same folder as .idea` test configuration with coverage, click "Replace with Suite" if prompted.
+4. Note that the window looks as it should.
+5. Run the `Test in other content root` test configuration, click "Replace with Suite" if prompted.
+6. Note that the test coverage is not displayed in the window.
